@@ -1,8 +1,14 @@
 import { Pool } from "pg";
-import { LatestInvoiceRaw, Revenue, InvoicesTable } from "./definitions";
+import {
+  LatestInvoiceRaw,
+  Revenue,
+  InvoicesTable,
+  CustomerField,
+  InvoiceForm,
+} from "./definitions";
 import { formatCurrency } from "./utils";
 
-const pool = new Pool({
+export const pool = new Pool({
   user: "userDb",
   host: "localhost",
   database: "nextjs-dashboard",
@@ -52,6 +58,8 @@ export async function fetchLatestInvoices() {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch the latest invoices.");
+  } finally {
+    client.release();
   }
 }
 
@@ -89,6 +97,8 @@ export async function fetchCardData() {
   } catch (error) {
     console.error("Database Error:", error);
     throw new Error("Failed to fetch card data.");
+  } finally {
+    client.release();
   }
 }
 
@@ -160,48 +170,55 @@ export async function fetchInvoicesPages(query: string) {
   }
 }
 
-// export async function fetchInvoiceById(id: string) {
-//   try {
-//     const data = await sql<InvoiceForm>`
-//       SELECT
-//         invoices.id,
-//         invoices.customer_id,
-//         invoices.amount,
-//         invoices.status
-//       FROM invoices
-//       WHERE invoices.id = ${id};
-//     `;
+export async function fetchInvoiceById(id: string) {
+  const client = await pool.connect();
+  try {
+    const data = await client.query<InvoiceForm>(
+      `
+      SELECT
+        invoices.id,
+        invoices.customer_id,
+        invoices.amount,
+        invoices.status
+      FROM invoices
+      WHERE invoices.id = $1;
+    `,
+      [id]
+    );
 
-//     const invoice = data.rows.map((invoice) => ({
-//       ...invoice,
-//       // Convert amount from cents to dollars
-//       amount: invoice.amount / 100,
-//     }));
+    const invoice = data.rows.map((invoice) => ({
+      ...invoice,
+      // Convert amount from cents to dollars
+      amount: invoice.amount / 100,
+    }));
 
-//     return invoice[0];
-//   } catch (error) {
-//     console.error('Database Error:', error);
-//     throw new Error('Failed to fetch invoice.');
-//   }
-// }
+    return invoice[0];
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch invoice.");
+  }
+}
 
-// export async function fetchCustomers() {
-//   try {
-//     const data = await sql<CustomerField>`
-//       SELECT
-//         id,
-//         name
-//       FROM customers
-//       ORDER BY name ASC
-//     `;
+export async function fetchCustomers() {
+  const client = await pool.connect();
+  try {
+    const data = await client.query<CustomerField>(`
+      SELECT
+        id,
+        name
+      FROM customers
+      ORDER BY name ASC
+    `);
 
-//     const customers = data.rows;
-//     return customers;
-//   } catch (err) {
-//     console.error('Database Error:', err);
-//     throw new Error('Failed to fetch all customers.');
-//   }
-// }
+    const customers = data.rows;
+    return customers;
+  } catch (err) {
+    console.error("Database Error:", err);
+    throw new Error("Failed to fetch all customers.");
+  } finally {
+    client.release();
+  }
+}
 
 // export async function fetchFilteredCustomers(query: string) {
 //   try {
