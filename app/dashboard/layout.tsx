@@ -1,5 +1,10 @@
 import SideNav from "@/app/ui/dashboard/sidenav";
 export const experimental_ppr = true;
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Invoices",
+};
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
