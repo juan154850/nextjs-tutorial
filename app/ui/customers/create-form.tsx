@@ -12,7 +12,7 @@ export default function Form() {
 
   return (
     <form action={formAction}>
-      <div className="bg-gray-100 p-5">
+      <div className="bg-gray-50 p-5">
         <div className="mb-4 w-full">
           <label htmlFor="name">Customer full name</label>
           <input
@@ -22,17 +22,37 @@ export default function Form() {
             className="w-full block rounded-lg border py-[9px] px-3 pr-4 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 focus:outline-none"
             name="name"
           />
+          <div id="name-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.name &&
+              state.errors.name.map((error: string) => (
+                <p className="mt-2 text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
+          </div>
         </div>
 
         <div className="mb-4 w-full">
           <label htmlFor="email">Customer email</label>
           <input
             placeholder="Customer email address"
-            type="email"
             id="email"
             className="w-full block rounded-lg border py-[9px] px-3 pr-4 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-400 focus:outline-none"
             name="email"
           />
+          <div id="email-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.email &&
+              state.errors.email.map((error: string) => (
+                <p className="mt-2 text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
+          </div>
+        </div>
+        <div id="message-error" aria-live="polite" aria-atomic="true">
+          {state.message && (
+            <p className="mt-2 text-sm text-red-500">{state.message}</p>
+          )}
         </div>
       </div>
       <div className="mt-6 flex justify-end gap-4">

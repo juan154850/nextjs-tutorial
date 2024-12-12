@@ -47,6 +47,14 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             defaultValue={customer.name}
           />
+          <div id="name-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.name &&
+              state.errors?.name.map((error: string) => (
+                <p className="mt-2 text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
+          </div>
         </div>
         {/* email */}
         <div className="mt-6">
@@ -57,12 +65,24 @@ export default function EditCustomerForm({ customer }: { customer: Customer }) {
             Email
           </label>
           <input
-            type="email"
             name="email"
             id="email"
             className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
             defaultValue={customer.email}
           />
+          <div id="email-error" aria-live="polite" aria-atomic="true">
+            {state.errors?.email &&
+              state.errors?.email.map((error: string) => (
+                <p className="mt-2 text-sm text-red-500" key={error}>
+                  {error}
+                </p>
+              ))}
+          </div>
+        </div>
+        <div id="message-error" aria-live="polite" aria-atomic="true">
+          {state.message && (
+            <p className="mt-2 text-sm text-red-500">{state.message}</p>
+          )}
         </div>
       </div>
       <div className="mt-6 flex justify-end gap-4">

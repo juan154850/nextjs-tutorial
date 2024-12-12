@@ -145,8 +145,16 @@ export type CustomerState = {
 
 const CustomerFormSchema = z.object({
   id: z.string(),
-  name: z.string().min(3),
-  email: z.string().email(),
+  name: z
+    .string({
+      invalid_type_error: "This field is required",
+    })
+    .min(3),
+  email: z
+    .string({
+      invalid_type_error: "This field is required",
+    })
+    .email(),
   image_url: z.string(),
 });
 
