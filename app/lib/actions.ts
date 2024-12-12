@@ -224,3 +224,14 @@ export const createCustomer = async (
   revalidatePath("/dashboard/customers");
   redirect("/dashboard/customers");
 };
+
+export async function deleteCustomer(id: string) {
+  try {
+    await client.query(`DELETE FROM customers WHERE id = $1`, [id]);
+    revalidatePath("/dashboard/customers");
+    return { message: "Deleted customer." };
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to delete customer." };
+  }
+}
