@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { signIn } from "@/auth";
 import { AuthError } from "next-auth";
+import { client } from "app/lib/data";
 
 export type State = {
   errors?: {
@@ -70,7 +71,6 @@ export const createInvoice = async (prevState: State, formData: FormData) => {
   const date = new Date().toISOString().split("T")[0];
 
   try {
-    const client = await pool.connect();
     await client.query(
       `INSERT INTO invoices (customer_id, amount, status, date)
       VALUES ($1 ,$2 ,$3 ,$4)`,
@@ -108,7 +108,6 @@ export async function updateInvoice(
   const amountInCents = amount * 100;
 
   try {
-    const client = await pool.connect();
     await client.query(
       `
       UPDATE invoices
@@ -127,7 +126,6 @@ export async function updateInvoice(
 
 export async function deleteInvoice(id: string) {
   try {
-    const client = await pool.connect();
     await client.query(`DELETE FROM invoices WHERE id = $1`, [id]);
     revalidatePath("/dashboard/invoices");
     return { message: "Deleted Invoice." };
@@ -136,3 +134,85 @@ export async function deleteInvoice(id: string) {
     return { message: "Failed to delete invoice." };
   }
 }
+
+export type CustomerState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+  };
+  message?: string | null;
+};
+
+const CustomerFormSchema = z.object({
+  id: z.string(),
+  name: z.string().min(3),
+  email: z.string().email(),
+  image_url: z.string(),
+});
+
+const UpdateCustomer = CustomerFormSchema.omit({ id: true, image_url: true });
+
+export const updateCustomer = async (
+  id: string,
+  prevState: CustomerState,
+  formData: FormData
+) => {
+  const validatedFields = UpdateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to edit Customer.",
+    };
+  }
+  const { name, email } = validatedFields.data;
+
+  try {
+    await client.query(
+      `UPDATE customers
+      SET name = $2, email = $3
+      WHERE id = $1`,
+      [id, name, email]
+    );
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to update customer." };
+  }
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+};
+
+const CreateCustomer = CustomerFormSchema.omit({ id: true, image_url: true });
+
+export const createCustomer = async (
+  prevState: CustomerState,
+  formData: FormData
+) => {
+  const validatedFields = CreateCustomer.safeParse({
+    name: formData.get("name"),
+    email: formData.get("email"),
+  });
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: "Missing Fields. Failed to create Customer.",
+    };
+  }
+  const { name, email } = validatedFields.data;
+  try {
+    await client.query(
+      `
+      INSERT INTO customers (name, email, image_url)
+      VALUES ($1, $2, '/customers/avatar.png')
+      `,
+      [name, email]
+    );
+  } catch (error) {
+    console.log(error);
+    return { message: "Failed to create customer." };
+  }
+  revalidatePath("/dashboard/customers");
+  redirect("/dashboard/customers");
+};
